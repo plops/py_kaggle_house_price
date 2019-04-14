@@ -113,15 +113,28 @@ Options:
 		    (sys.stdout.flush)))
 
 		 (setf df (pd.read_csv (string "../data/train.csv")))
-
-		 (warn (dot (string "these columns have missing entries: {}")
-			    (format
-			     ("list"
-			      (aref df.columns
-				    (dot (df.isnull)
-					 (any)))))))
+		 (do0
+		  (warn (dot (string "these columns have missing entries: {}")
+			     (format
+			      ("list"
+			       (aref df.columns
+				     (dot (df.isnull)
+					  (any)))))))
+		  (sns.heatmap (df.isnull)))
 		 
 		 (setf df_features (df.drop :columns (list (string "SalePrice"))))
+		 (do0
+		  (plog (string "correlation of columns with numerical values"))
+		  (setf df_num (dot (df.select_dtypes :include (list np.number))
+					     (drop :columns (list (string "Id"))))
+			df_num_corr (df_num.corr)
+			df_num_top_feature (aref df_num_corr.index
+						 (< .5 (aref df_num_corr (string "SalePrice"))))
+			df_num_top_corr (dot (aref df_num df_num_top_feature)
+					     (corr)))
+		  (sns.heatmap df_num_top_corr :annot True))
+		 
+		 
 		 (setf y (np.log1p df.SalePrice) ;; log makes distribution more normal
 		       X df_features.values)
 		 (setf skf (sklearn.model_selection.StratifiedKFold :n_splits (int (aref args (string "-f"))) :random_state None :shuffle False))

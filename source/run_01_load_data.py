@@ -56,7 +56,14 @@ def warn(msg):
     sys.stdout.flush()
 df=pd.read_csv("../data/train.csv")
 warn("these columns have missing entries: {}".format(list(df.columns[df.isnull().any()])))
+sns.heatmap(df.isnull())
 df_features=df.drop(columns=["SalePrice"])
+plog("correlation of columns with numerical values")
+df_num=df.select_dtypes(include=[np.number]).drop(columns=["Id"])
+df_num_corr=df_num.corr()
+df_num_top_feature=df_num_corr.index[(((5.e-1))<(df_num_corr["SalePrice"]))]
+df_num_top_corr=df_num[df_num_top_feature].corr()
+sns.heatmap(df_num_top_corr, annot=True)
 y=np.log1p(df.SalePrice)
 X=df_features.values
 skf=sklearn.model_selection.StratifiedKFold(n_splits=int(args["-f"]), random_state=None, shuffle=False)
