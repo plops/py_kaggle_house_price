@@ -25,25 +25,41 @@
   (let* ((code `(do0
 		 (string3 ,(format nil "load data.
 Usage:
-  ~a [-vh]
+  ~a [-vh] [-f N_FOLDS]
 
 Options:
   -h --help               Show this screen
   -v --verbose            Print debugging output
+  -f N_FOLDS              number of folds for stratified k fold [default: 10]
 "
 				   *code-file*))
 		 "# 2019-04-14 martin kielhorn"
 		 
 		 ;;"from __future__ import print_function"
 		 ;; "from __future__ import division"
-			
+		 "# https://github.com/emanuele/kaggle_pbr/blob/master/blend.py"
+
+		 (do0
+		  (imports (matplotlib))
+	     	  (imports ((plt matplotlib.pyplot)))
+		  
+		  (do0
+		   (plt.ion)
+		   (setf font (dict ((string size) (string 5))))
+		   (matplotlib.rc (string "font") **font)))
+		 
+		 
 		 (imports (
 			   sys
 			   time
 			   docopt
 			   (pd pandas)
-			   (np numpy)))
-			
+			   (np numpy)
+			   sklearn.ensemble
+			   sklearn.model_selection))
+					;sklearn.ensemble.RandomForestClassifier
+					
+		 
 		 (setf args (docopt.docopt __doc__ :version (string "0.0.1")))
 		 (if (aref args (string "--verbose"))
 		     (print args))
@@ -95,7 +111,10 @@ Options:
 			      bcolors.ENDC))
 		    (sys.stdout.flush)))
 
-		 (setf df (pd.read_csv (string "../data/train.csv"))))))
+		 (setf df (pd.read_csv (string "../data/train.csv")))
+
+		 ;(sklearn.model_selection.StratifiedKFold (aref args (int (string "-f"))))
+		 )))
     (write-source *source* code)
     (write-source "/dev/shm/s" `(do0
 				 ))))

@@ -1,17 +1,26 @@
 """load data.
 Usage:
-  run_01_load_data [-vh]
+  run_01_load_data [-vh] [-f N_FOLDS]
 
 Options:
   -h --help               Show this screen
   -v --verbose            Print debugging output
+  -f N_FOLDS              number of folds for stratified k fold [default: 10]
 """
 # 2019-04-14 martin kielhorn
+# https://github.com/emanuele/kaggle_pbr/blob/master/blend.py
+import matplotlib
+import matplotlib.pyplot as plt
+plt.ion()
+font={("size"):("5")}
+matplotlib.rc("font", **font)
 import sys
 import time
 import docopt
 import pandas as pd
 import numpy as np
+import sklearn.ensemble
+import sklearn.model_selection
 args=docopt.docopt(__doc__, version="0.0.1")
 if ( args["--verbose"] ):
     print(args)
