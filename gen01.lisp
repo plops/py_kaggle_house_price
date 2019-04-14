@@ -25,12 +25,13 @@
   (let* ((code `(do0
 		 (string3 ,(format nil "load data.
 Usage:
-  ~a [-vh] [-f N_FOLDS]
+  ~a [-vh] [-f N_FOLDS] [-e N_ESTIMATORS]
 
 Options:
   -h --help               Show this screen
   -v --verbose            Print debugging output
   -f N_FOLDS              number of folds for stratified k fold [default: 10]
+  -e N_ESTIMATORS         number of estimators in the random forest classifier [default: 100]
 "
 				   *code-file*))
 		 "# 2019-04-14 martin kielhorn"
@@ -38,7 +39,7 @@ Options:
 		 ;;"from __future__ import print_function"
 		 ;; "from __future__ import division"
 		 "# https://github.com/emanuele/kaggle_pbr/blob/master/blend.py"
-
+		 "# https://www.kaggle.com/surya635/house-price-prediction"
 		 (do0
 		  (imports (matplotlib))
 	     	  (imports ((plt matplotlib.pyplot)))
@@ -49,7 +50,7 @@ Options:
 		   (matplotlib.rc (string "font") **font)))
 		 
 		 
-		 (imports (
+		 (imports ((sns seaborn)
 			   sys
 			   time
 			   docopt
@@ -57,7 +58,7 @@ Options:
 			   (np numpy)
 			   sklearn.ensemble
 			   sklearn.model_selection))
-					;sklearn.ensemble.RandomForestClassifier
+					
 					
 		 
 		 (setf args (docopt.docopt __doc__ :version (string "0.0.1")))
@@ -113,8 +114,29 @@ Options:
 
 		 (setf df (pd.read_csv (string "../data/train.csv")))
 
-		 ;(sklearn.model_selection.StratifiedKFold (aref args (int (string "-f"))))
-		 )))
+		 (warn (dot (string "these columns have missing entries: {}")
+			    (format
+			     ("list"
+			      (aref df.columns
+				    (dot (df.isnull)
+					 (any)))))))
+		 
+		 (setf df_features (df.drop :columns (list (string "SalePrice"))))
+		 (setf y (np.log1p df.SalePrice) ;; log makes distribution more normal
+		       X df_features.values)
+		 (setf skf (sklearn.model_selection.StratifiedKFold :n_splits (int (aref args (string "-f"))) :random_state None :shuffle False))
+		 (setf clf
+		       (sklearn.ensemble.RandomForestClassifier
+			:n_estimators (int (aref args (string "-e")))
+			:n_jobs -1 ;; all processors
+			:criterion (string "gini")))
+		 (for ((ntuple train_index test_index) (skf.split X y))
+		      (clf.fit (aref X train_index)
+			       (aref y train_index))
+		      (setf y_submission (aref (clf.predict_proba (aref X test_index)) ":" 1))
+		      (plog y_submission)))))
+    
+    
     (write-source *source* code)
     (write-source "/dev/shm/s" `(do0
 				 ))))
